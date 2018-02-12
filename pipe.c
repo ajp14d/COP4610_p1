@@ -14,24 +14,7 @@ void OnePipe(char** argv1, char** argv2, int background, char* cmd)
 	{
 		pid_t c2PID = fork();
 		// parent of fork2
-		if (c2PID > 0)
-		{
-			close(3);
-			close(4);
-			if (background != -1)
-			{
-				waitpid(c2PID, &status, WNOHANG);
-				waitpid(c1PID, &status, WNOHANG);
-				QueueProcess(CreateProcessEntry(c1PID, c2PID, cmd));
-			}
-			else
-			{
-				waitpid(c2PID, &status, 0);
-				waitpid(c1PID, &status, 0);
-			}
-		}
-		// child of fork2
-		else if(c2PID == 0)
+		if (c2PID == 0)
 		{
 			close(0);
 			dup(3);
@@ -42,6 +25,24 @@ void OnePipe(char** argv1, char** argv2, int background, char* cmd)
 			printf("Error executing in fork in OnePipe: \n");
 			PrintArgVector(argv2);
 		}
+		// child of fork2
+		else if(c2PID > 0)
+		{
+			close(3);
+			close(4);
+			if (background == -1)
+			{
+				waitpid(c2PID, &status, 0);
+				waitpid(c1PID, &status, 0);
+			}
+			else
+			{
+				waitpid(c2PID, &status, WNOHANG);
+				waitpid(c1PID, &status, WNOHANG);
+				QueueProcess(CreateProcessEntry(c1PID, c2PID, cmd));
+			}
+		}	
+		
 		else
 		{
 			printf("Error executing in fork in OnePipe: \n");
